@@ -1,2 +1,2 @@
 # third-party-functions
-Functions hypothesised by non-Kymata members.
+Functions written by non-Kymata members.
