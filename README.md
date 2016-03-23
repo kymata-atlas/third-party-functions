@@ -1,7 +1,7 @@
 # third-party-functions
 This repository holds the source code of functions written by third-party research groups. *Note: This repository only holds functions for which there is not already an existing Github repository.*
 
-Where possible, the code should follow - exactly - a published description. This description, with a doi (or a pdf of the original description itself), should be cited, and ideally the code should contain comments that link lines of code to equation numbers eg.
+Where possible, the code should follow - exactly - a published description. This description, with a doi (or a pdf of the original description itself), should be cited, and ideally the code should contain comments that link lines of code to equation numbers, e.g.
 
 ```javascript
 // This function is taken from J. Doe (2002), 'Hypothesized  sound to pitch model' J. Neuroscience
