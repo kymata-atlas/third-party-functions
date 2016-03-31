@@ -1,4 +1,4 @@
-function [a, b, h, A, J, Q ] = BRISCAM09(xyz, xyzw, la, yb, para)
+function [a, b, an, bn, A, J ] = BRISCAM09(xyz, xyzw, la, yb, para)
 
     % This function is an implementation of the BRISCAM09 color appearance model
     % -------
@@ -30,7 +30,7 @@ function [a, b, h, A, J, Q ] = BRISCAM09(xyz, xyzw, la, yb, para)
     fl = 0.2*(k^4)*la + 0.1*((1-k^4)^2)*((5*la)^(1/3));
     n = yb/xyzw(2);
     ncb = 0.725*(1/n)^0.2;
-    nbb = ncb;
+    Nbb = ncb;
     z = 1.48+sqrt(n);
 
     % eq 6
@@ -49,27 +49,27 @@ function [a, b, h, A, J, Q ] = BRISCAM09(xyz, xyzw, la, yb, para)
 
     % eq. 8a
     
-    sigmaL = 27.13^(1/0.42)*(D(lmsw(1)/100)+(1-D));
+    sigmaL = 27.13^(1/0.42)*(D*(lmsw(1)/100)+(1-D));
     
     % eq. 8b
         
-    sigmaM = 27.13^(1/0.42)*(D(lmsw(2)/100)+(1-D));
+    sigmaM = 27.13^(1/0.42)*(D*(lmsw(2)/100)+(1-D));
     
     % eq. 8c
     
-    sigmaS = 27.13^(1/0.42)*(D(lmsw(3)/100)+(1-D));
+    sigmaS = 27.13^(1/0.42)*(D*(lmsw(3)/100)+(1-D));
     
     % The nonlinear response compression 
     
     % eq. 9a-c
     
-    lmsa(1,1) = (400*((fl*lms(1)/100)^0.42)/(fl*rgbp(1)/100)^0.42+sigmaL^0.42)+0.1;
-    lmsa(2,1) = (400*((fl*lms(2)/100)^0.42)/(fl*rgbp(2)/100)^0.42+sigmaM^0.42)+0.1;
-    lmsa(3,1) = (400*((fl*lms(3)/100)^0.42)/(fl*rgbp(3)/100)^0.42+sigmaS^0.42)+0.1;
+    lmsa(1,1) = (400*((fl*lms(1)/100)^0.42)/(((fl*lms(1)/100)^0.42)+(sigmaL^0.42)))+0.1;
+    lmsa(2,1) = (400*((fl*lms(2)/100)^0.42)/(((fl*lms(2)/100)^0.42)+(sigmaM^0.42)))+0.1;
+    lmsa(3,1) = (400*((fl*lms(3)/100)^0.42)/(((fl*lms(3)/100)^0.42)+(sigmaS^0.42)))+0.1;
 
-    lmswa(1,1) = (400*((fl*lmsw(1)/100)^0.42)/(fl*rgbpw(1)/100)^0.42+sigmaL^0.42)+0.1;
-    lmswa(2,1) = (400*((fl*lmsw(2)/100)^0.42)/(fl*rgbpw(2)/100)^0.42+sigmaM^0.42)+0.1;
-    lmswa(3,1) = (400*((fl*lmsw(3)/100)^0.42)/(fl*rgbpw(3)/100)^0.42+sigmaS^0.42)+0.1;            
+    lmswa(1,1) = (400*((fl*lmsw(1)/100)^0.42)/(((fl*lmsw(1)/100)^0.42)+(sigmaL^0.42)))+0.1;
+    lmswa(2,1) = (400*((fl*lmsw(2)/100)^0.42)/(((fl*lmsw(2)/100)^0.42)+(sigmaM^0.42)))+0.1;
+    lmswa(3,1) = (400*((fl*lmsw(3)/100)^0.42)/(((fl*lmsw(3)/100)^0.42)+(sigmaS^0.42)))+0.1;             
             
     % Section: 'Computation of Appearance Correlates'
     
@@ -119,7 +119,7 @@ function [a, b, h, A, J, Q ] = BRISCAM09(xyz, xyzw, la, yb, para)
     yp = max(0, 0.9041*(cosd(90.9 - h))^2.5251);
     bp = max(0, 0.7832*(cosd(268.4 - h))^0.2886); 
     
-    % Mapping into perceptual color opponent space,
+    % Mapping into perceptual color opponent space
     
     % eqs. 22
     
