@@ -114,10 +114,11 @@ function [a, b, an, bn, A, J ] = BRISCAM09(xyz, xyzw, la, yb, para)
 
     % eqs. 18-21
      
-    rp = max(0, 0.6581*(cosd(9.1 - h))^0.5390);
-    gp = max(0, 0.9482*(cosd(167.0 - h))^2.9435);
-    yp = max(0, 0.9041*(cosd(90.9 - h))^2.5251);
-    bp = max(0, 0.7832*(cosd(268.4 - h))^0.2886); 
+    rp = 0.6581*max([0, (cosd(9.1 - h))])^0.5390;
+    gp = 0.9482*max([0, (cosd(167.0 - h))])^2.9435;
+    
+    yp = 0.9041*max([0, (cosd(90.9 - h))])^2.5251;
+    bp = 0.7832*max([0, (cosd(268.4 - h))])^0.2886; 
     
     % Mapping into perceptual color opponent space
     
