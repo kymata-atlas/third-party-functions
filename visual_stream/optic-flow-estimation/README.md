@@ -13,7 +13,7 @@ Our changes to Raudies code are minimal, primarily:
 
 ## Versions
 
-Two researchers worked on this prior to establishing proper distributed version-control practise, and as such there are two versions, the second being contained within `/andys-version`. The main version is good for use of the `HornSchunk` function, and the inner version is good for use of the `Heeger` functions.
+Two researchers worked on this prior to establishing proper distributed version-control practise, and as such there are two versions, the second being contained within `/andy-version`. The main version is good for use of the `HornSchunk` function, and the inner version is good for use of the `Heeger` functions.
 
 We aim to find time to rationalise this in future.
 
