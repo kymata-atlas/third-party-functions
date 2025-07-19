@@ -2,13 +2,13 @@
 name = "third-party-functions"
 version = "0.1.0"
 description = ""
-authors = [
-    {name = "neukym",email = "acgt2@cam.ac.uk"}
-]
+authors = [{name = "neukym",email = "acgt2@cam.ac.uk"}]
 readme = "README.md"
-requires-python = ">=3.10"
-dependencies = [
-]
+requires-python = ">=3.11"
+
+[tool.poetry.dependencies]
+numpy = "^2.3.1"
+scipy = "^1.16.0"
 
 
 [build-system]
