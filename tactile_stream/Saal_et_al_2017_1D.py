@@ -445,6 +445,14 @@ if __name__ == '__main__':
     # Run the simulation
     afferent_responses = simulate_tactile_model(displacement_input_mm, model_config)
 
+    # Compute rolling average (window = 2ms) for each afferent's spike train (for easier visualisation)
+    rolling_window = 6  # in ms (since dt=1ms, window=2 samples)
+    afferent_responses_rolling = {}
+    for afferent_type, trains in afferent_responses.items():
+        afferent_responses_rolling[afferent_type] = [
+            np.convolve(train, np.ones(rolling_window)/rolling_window, mode='same') for train in trains
+        ]
+
     # --- Output Analysis Example with Plotting ---
     print("\n--- Simulation Results Summary ---")
     
@@ -465,7 +473,7 @@ if __name__ == '__main__':
     # Plot 2, 3, 4: Afferent Population Activity
     afferent_types = ['SA1', 'RA', 'PC']
     for i, afferent_type in enumerate(afferent_types):
-        spike_trains = afferent_responses[afferent_type]
+        spike_trains = afferent_responses_rolling[afferent_type]
         num_afferents = len(spike_trains)
 
         if num_afferents > 0:
