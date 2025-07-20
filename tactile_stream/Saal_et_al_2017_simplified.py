@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 import numpy as np
 from scipy.signal import butter, lfilter
 
@@ -288,6 +289,10 @@ def simulate_tactile_model(displacement_input_array_mm, config):
         'PC': []
     }
 
+    # Define how often to print progress (e.g., every 1 second of simulation time)
+    # Since dt = 0.001s, 1 second = 1000 time steps
+    progress_interval_steps = int(1 / config.dt) # 1000 steps for 1 second
+
     # Step 2: Simulate populations of Integrate-and-Fire neurons
     for afferent_type in ['SA1', 'RA', 'PC']:
         # Calculate number of afferents in the 1mm x 1mm patch
@@ -321,6 +326,17 @@ def simulate_tactile_model(displacement_input_array_mm, config):
                 }
                 spike_train[t_idx] = neuron.step(current_mechanoreceptor_input, current_time_ms)
 
+                # --- Progress Printing ---
+                # Check if it's time to print progress for the current afferent
+                if (t_idx + 1) % progress_interval_steps == 0:
+                    processed_seconds = (t_idx + 1) * config.dt
+                    # Use '\r' to overwrite the current line and `end=''` to prevent a newline
+                    # This creates a dynamic progress bar effect
+                    print(f"\r  Afferent {i+1}/{num_afferents_in_population}: {processed_seconds:.0f} seconds processed.", end='')
+            
+            # Print a newline after each afferent's simulation is complete to ensure the final message is on a new line
+            print("")
+
             all_afferent_spike_trains[afferent_type].append(spike_train)
 
     return all_afferent_spike_trains
@@ -331,67 +347,80 @@ if __name__ == '__main__':
     # Initialize configuration
     model_config = Config()
 
-    # Create a dummy displacement input array (e.g., 10 seconds at 1ms intervals)
-    # This simulates your description: pseudo-sinusoidal flutter (e.g., 20-50 Hz)
-    # as a carrier for a 0.5mm high 200Hz vibration, appearing and disappearing randomly.
-    duration_s = 10  # 10 seconds
-    time_points = np.arange(0, duration_s, model_config.dt)
-    num_time_steps = len(time_points)
+    # --- Change starts here ---
+    # Define the path to your CSV file
+    csv_file_path = 'tactile_stream/input/LH_thumb_stimulus_short.csv'
 
-    displacement_input_mm = np.zeros(num_time_steps)
+    try:
+        # Read the displacement input from the CSV file
+        # Assumes a single row of comma-separated values
+        displacement_input_mm = np.loadtxt(csv_file_path, delimiter=',')
+        print(f"Successfully loaded displacement input from {csv_file_path}")
+        print(f"Input shape: {displacement_input_mm.shape}")
 
-    # Simulate pseudo-sinusoidal flutter (carrier)
-    flutter_frequency = 40  # Hz
-    flutter_amplitude = 2.0  # mm (0 to 4mm range implies 2mm amplitude around 2mm baseline)
-    baseline_displacement = 2.0  # mm
-    displacement_input_mm = baseline_displacement + flutter_amplitude * np.sin(
-        2 * np.pi * flutter_frequency * time_points)
+        # Ensure the input is 1D if it was read as a 2D array with one row
+        if displacement_input_mm.ndim > 1 and displacement_input_mm.shape[0] == 1:
+            displacement_input_mm = displacement_input_mm.flatten()
 
-    # Add 200Hz vibration appearing and disappearing randomly
-    vibration_frequency = 200  # Hz
-    vibration_amplitude = 0.25  # mm (0.5mm high implies +/- 0.25mm from carrier)
+    except FileNotFoundError:
+        print(f"Error: The file '{csv_file_path}' was not found.")
+        print("Please ensure the CSV file is in the correct directory or provide the full path.")
 
-    # Introduce random vibration segments
-    segment_duration_s = 0.5  # Each segment lasts 0.5 seconds
-    num_segments = int(duration_s / segment_duration_s)
+    # Determine simulation duration based on the loaded input length
+    duration_s = len(displacement_input_mm) * model_config.dt
+    time_points = np.arange(0, duration_s, model_config.dt) # Re-align time_points with loaded data
+    num_time_steps = len(time_points) # Re-align num_time_steps
 
-    for i in range(num_segments):
-        if np.random.rand() > 0.5:  # 50% chance to have vibration in a segment
-            start_idx = int(i * segment_duration_s / model_config.dt)
-            end_idx = int((i + 1) * segment_duration_s / model_config.dt)
+    print(f"Duration of stimulus is '{duration_s}'s")
 
-            # Ensure indices are within bounds
-            start_idx = min(start_idx, num_time_steps)
-            end_idx = min(end_idx, num_time_steps)
-
-            if start_idx < end_idx:
-                segment_time = time_points[start_idx:end_idx] - time_points[start_idx]
-                displacement_input_mm[start_idx:end_idx] += vibration_amplitude * np.sin(
-                    2 * np.pi * vibration_frequency * segment_time)
-
-    # Ensure displacement stays within 0-4mm range
-    displacement_input_mm = np.clip(displacement_input_mm, 0, 4)
+    # Multiply by 4
+    displacement_input_mm = displacement_input_mm*4
 
     # Run the simulation
     afferent_responses = simulate_tactile_model(displacement_input_mm, model_config)
 
-    # --- Output Analysis Example ---
-    # You can now analyze the spike trains for each afferent type.
-    # For instance, calculate the mean firing rate over the simulation duration.
+    # --- Output Analysis Example with Plotting ---
     print("\n--- Simulation Results Summary ---")
-    for afferent_type, spike_trains in afferent_responses.items():
-        total_spikes = sum(np.sum(st) for st in spike_trains)
+    
+    # Define time window for plotting
+    plot_duration_ms = 100
+    plot_time_indices = int(plot_duration_ms / model_config.dt / 1000)
+
+    # Prepare plot
+    fig, axs = plt.subplots(4, 1, figsize=(12, 8), sharex=True) # 4 subplots: displacement + 3 afferent types
+    time_ms_plot = np.arange(0, plot_duration_ms, model_config.dt * 1000) # Time axis for plotting
+
+    # Plot 1: Displacement Input
+    axs[0].plot(time_ms_plot, displacement_input_mm[:plot_time_indices], color='blue')
+    axs[0].set_title('Skin Displacement Input')
+    axs[0].set_ylabel('Displacement (mm)')
+    axs[0].grid(True)
+
+    # Plot 2, 3, 4: Afferent Population Activity
+    afferent_types = ['SA1', 'RA', 'PC']
+    for i, afferent_type in enumerate(afferent_types):
+        spike_trains = afferent_responses[afferent_type]
         num_afferents = len(spike_trains)
 
         if num_afferents > 0:
+            # Sum spikes across all afferents of this type at each millisecond
+            population_spike_sum = np.sum(spike_trains, axis=0) # Sums along the afferent dimension
+            
+            total_spikes = np.sum(population_spike_sum)
             avg_firing_rate_hz = (total_spikes / num_afferents) / duration_s
             print(f"{afferent_type} Population (n={num_afferents}): Average Firing Rate = {avg_firing_rate_hz:.2f} Hz")
 
-            # Example: Look at the first afferent's spike train
-            # print(f"First {afferent_type} afferent spike train (first 100ms):")
-            # print(spike_trains[0][:100]) # Print first 100ms
+            # Plot summed activity
+            axs[i+1].plot(time_ms_plot, population_spike_sum[:plot_time_indices], color='red')
+            axs[i+1].set_title(f'{afferent_type} Population Activity')
+            axs[i+1].set_ylabel('Spikes per ms')
+            axs[i+1].grid(True)
         else:
             print(f"{afferent_type} Population: No afferents simulated (density/patch size too small).")
+            axs[i+1].set_title(f'{afferent_type} Population Activity (No Afferents Simulated)')
+            axs[i+1].set_ylabel('Spikes per ms')
+            axs[i+1].grid(True)
 
-    # Further analysis would involve plotting spike rasters, PSTHs, etc.
-    # using libraries like matplotlib.
+    axs[-1].set_xlabel('Time (ms)') # Set x-label only on the bottom-most subplot
+    plt.tight_layout() # Adjust layout to prevent overlapping titles/labels
+    plt.show()
