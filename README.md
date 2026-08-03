@@ -30,3 +30,10 @@ Doe02_sound_to_pitch(left_channel,right_channel){
 ```
 
 Functions can be written in any programming language. Preferably the language should be open-source, and the version number of language should also be included in the file.
+
+
+## The functions
+
+- [Optic-flow estimation](/visual_stream/optic-flow-estimation/README.md), including functions of:
+  - Heeger (1988)
+  - Horn & Schunck (1981)
